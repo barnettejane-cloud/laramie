@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Lawrence & Laramie</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: #0f0f0f;
+      font-family: 'Georgia', serif;
+    }
+
+    header {
+      padding: 14px 24px;
+      background: #0f0f0f;
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      border-bottom: 1px solid #2a2a2a;
+    }
+
+    header h1 {
+      font-size: 1rem;
+      font-weight: 400;
+      color: #e8e0d0;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    header span {
+      font-size: 0.75rem;
+      color: #555;
+      letter-spacing: 0.08em;
+    }
+
+    #map {
+      flex: 1;
+    }
+
+    /* Custom popup styling */
+    .leaflet-popup-content-wrapper {
+      background: #0f0f0f;
+      border: 1px solid #3a3a3a;
+      border-radius: 2px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.6);
+      color: #e8e0d0;
+    }
+
+    .leaflet-popup-tip {
+      background: #0f0f0f;
+    }
+
+    .leaflet-popup-content {
+      margin: 14px 18px;
+    }
+
+    .popup-city {
+      font-size: 0.85rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #c8b89a;
+      margin-bottom: 4px;
+    }
+
+    .popup-state {
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      color: #555;
+      text-transform: uppercase;
+    }
+
+    .leaflet-popup-close-button {
+      color: #555 !important;
+    }
+
+    .leaflet-popup-close-button:hover {
+      color: #c8b89a !important;
+    }
+  </style>
+</head>
+
+
+<body>
+
+  <header>
+    <h1>Two Points</h1>
+    <span>Lawrence, KS &nbsp;·&nbsp; Laramie, WY</span>
+  </header>
+
+  <div id="map"></div>
+
+  <script>
+    const map = L.map('map', {
+      center: [38.9717, -95.2353],
+      zoom: 6,
+      zoomControl: true,
+    });
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
+      subdomains: 'abcd',
+      maxZoom: 19
+    }).addTo(map);
+
+    // Custom minimal marker icon
+    function makeIcon(color) {
+      return L.divIcon({
+        className: '',
+        html: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="28" viewBox="0 0 20 28">
+          <circle cx="10" cy="10" r="7" fill="${color}" opacity="0.9"/>
+          <line x1="10" y1="17" x2="10" y2="27" stroke="${color}" stroke-width="1.5" opacity="0.6"/>
+        </svg>`,
+        iconSize: [20, 28],
+        iconAnchor: [10, 27],
+        popupAnchor: [0, -28]
+      });
+    }
+
+    const lawrencePopup = `
+      <div class="popup-city">Lawrence</div>
+      <div class="popup-state">Kansas, USA &nbsp;·&nbsp; 38.97°N 95.24°W</div>
+    `;
+
+    const laramiePopup = `
+      <div class="popup-city">Laramie</div>
+      <div class="popup-state">Wyoming, USA &nbsp;·&nbsp; 41.31°N 105.59°W</div>
+    `;
+
+    L.marker([38.9717, -95.2353], { icon: makeIcon('#c8b89a') })
+      .addTo(map)
+      .bindPopup(lawrencePopup);
+
+    L.marker([41.3114, -105.5911], { icon: makeIcon('#8ab4c8') })
+      .addTo(map)
+      .bindPopup(laramiePopup);
+  </script>
+
+</body>
+</html>
