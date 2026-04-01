@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Lawrence & Laramie</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      background: #0f0f0f;
+      font-family: 'Georgia', serif;
+      overflow: hidden;
+    }
+
+    header {
+      padding: 14px 24px;
+      background: #0f0f0f;
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      border-bottom: 1px solid #2a2a2a;
+      flex-shrink: 0;
+    }
+
+    header h1 {
+      font-size: 1rem;
+      font-weight: 400;
+      color: #e8e0d0;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    header span {
+      font-size: 0.75rem;
+      color: #555;
+      letter-spacing: 0.08em;
+    }
+
+    #map-wrapper {
+      flex: 1;
+      position: relative;
+      background: #0f0f0f;
+      min-height: 0;
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+      border-radius: 2px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Sparkle canvas overlays the map */
+    #sparkle-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 400; /* above leaflet tiles but below popups */
+    }
+
+    .leaflet-popup-content-wrapper {
+      background: #0f0f0f;
+      border: 1px solid #3a3a3a;
+      border-radius: 2px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.6);
+      color: #e8e0d0;
+    }
+
+    .leaflet-popup-tip { background: #0f0f0f; }
+
+    .leaflet-popup-content { margin: 14px 18px; }
+
+    .popup-city {
+      font-size: 0.85rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #c8b89a;
+      margin-bottom: 4px;
+    }
+
+    .popup-state {
+      font-size: 0.7rem;
+      letter-spacing: 0.1em;
+      color: #555;
+      text-transform: uppercase;
+    }
+
+    .popup-here {
+      font-size: 1rem;
+      letter-spacing: 0.12em;
+      color: #ffe97a;
+      font-style: italic;
+    }
+
+    .leaflet-popup-close-button { color: #555 !important; }
+    .leaflet-popup-close-button:hover { color: #c8b89a !important; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Two Points</h1>
+    <span>Lawrence, KS &nbsp;·&nbsp; Laramie, WY</span>
+  </header>
+
+  <div id="map-wrapper">
+    <div id="map"></div>
+    <canvas id="sparkle-canvas"></canvas>
+  </div>
+
+  <script>
+    // ── Coordinates ──────────────────────────────────────────────
+    const LAWRENCE = [38.9717, -95.2353];
+    const LARAMIE  = [41.3114, -105.5911];
+
+    // ── Leaflet map ──────────────────────────────────────────────
+    const map = L.map('map', {
+      center: [38.9717, -95.2353],
+      zoom: 6,
+      zoomControl: true,
+    });
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
+      subdomains: 'abcd',
+      maxZoom: 19
+    }).addTo(map);
+
+    function makeIcon(color) {
+      return L.divIcon({
+        className: '',
+        html: `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="28" viewBox="0 0 20 28">
+          <circle cx="10" cy="10" r="7" fill="${color}" opacity="0.9"/>
+          <line x1="10" y1="17" x2="10" y2="27" stroke="${color}" stroke-width="1.5" opacity="0.6"/>
+        </svg>`,
+        iconSize: [20, 28],
+        iconAnchor: [10, 27],
+        popupAnchor: [0, -28]
+      });
+    }
+
+    L.marker(LAWRENCE, { icon: makeIcon('#c8b89a') })
+      .addTo(map)
+      .bindPopup(`
+        <div class="popup-here">&#10022; You are here</div>
+        <div class="popup-state" style="margin-top:5px;">Lawrence, Kansas &nbsp;&middot;&nbsp; 38.97&deg;N 95.24&deg;W</div>
+      `);
+
+    L.marker(LARAMIE, { icon: makeIcon('#8ab4c8') })
+      .addTo(map)
+      .bindPopup(`
+        <div class="popup-city">Laramie</div>
+        <div class="popup-state">Wyoming, USA &nbsp;&middot;&nbsp; 41.31&deg;N 105.59&deg;W</div>
+      `);
+
+    // ── Sparkle line on canvas ───────────────────────────────────
+    const canvas = document.getElementById('sparkle-canvas');
+    const ctx    = canvas.getContext('2d');
+
+    function resize() {
+      canvas.width  = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+    }
+    resize();
+    window.addEventListener('resize', () => { resize(); rebuildSparkles(); });
+    map.on('zoom move zoomend moveend', rebuildSparkles);
+
+    // Colors: pink, blue, white
+    const COLORS = [
+      '#ff9ecd', '#ff69b4', '#ffb3de', '#f472b6', // pinks
+      '#7ec8f7', '#aad4ff', '#60a5fa', '#93c5fd',  // blues
+      '#ffffff', '#e0e0ff', '#ffe0f0',              // whites / pale
+    ];
+
+    const NUM_SPARKLES = 90;
+    let sparkles = [];
+
+    // Convert lat/lng to canvas pixel position
+    function latLngToPixel(latLng) {
+      const pt = map.latLngToContainerPoint(L.latLng(latLng));
+      return { x: pt.x, y: pt.y };
+    }
+
+    // Interpolate a point along the straight line between the two cities (t in [0,1])
+    function pointOnLine(t) {
+      const a = latLngToPixel(LAWRENCE);
+      const b = latLngToPixel(LARAMIE);
+      return {
+        x: a.x + (b.x - a.x) * t,
+        y: a.y + (b.y - a.y) * t,
+      };
+    }
+
+    // Perpendicular normal to the line
+    function lineNormal() {
+      const a = latLngToPixel(LAWRENCE);
+      const b = latLngToPixel(LARAMIE);
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const len = Math.sqrt(dx*dx + dy*dy) || 1;
+      return { nx: -dy / len, ny: dx / len };
+    }
+
+    function rebuildSparkles() {
+      sparkles = [];
+      for (let i = 0; i < NUM_SPARKLES; i++) {
+        sparkles.push({
+          t:       Math.random(),           // position along line
+          offset:  (Math.random() - 0.5) * 10, // perpendicular scatter (px)
+          size:    0.7 + Math.random() * 2.4,
+          color:   COLORS[Math.floor(Math.random() * COLORS.length)],
+          speed:   0.0004 + Math.random() * 0.0008,
+          phase:   Math.random() * Math.PI * 2,
+          twinkle: 1.5 + Math.random() * 4,
+          type:    Math.random() < 0.3 ? 'star' : 'dot',
+        });
+      }
+    }
+    rebuildSparkles();
+
+    function drawStar(x, y, r, color, alpha) {
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 0.9;
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 10;
+      for (let a = 0; a < 4; a++) {
+        const angle = (a / 4) * Math.PI;
+        ctx.beginPath();
+        ctx.moveTo(x + Math.cos(angle) * r * 2.2, y + Math.sin(angle) * r * 2.2);
+        ctx.lineTo(x - Math.cos(angle) * r * 2.2, y - Math.sin(angle) * r * 2.2);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawGlowDot(x, y, r, color, alpha) {
+      ctx.save();
+      // soft outer glow
+      ctx.globalAlpha = alpha * 0.25;
+      const grad = ctx.createRadialGradient(x, y, 0, x, y, r * 4);
+      grad.addColorStop(0, color);
+      grad.addColorStop(1, 'transparent');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(x, y, r * 4, 0, Math.PI * 2);
+      ctx.fill();
+      // bright core
+      ctx.globalAlpha = alpha;
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 12;
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function animate(ts) {
+      const W = canvas.width, H = canvas.height;
+      ctx.clearRect(0, 0, W, H);
+
+      // Draw a faint base line between the two cities
+      const a = latLngToPixel(LAWRENCE);
+      const b = latLngToPixel(LARAMIE);
+
+      ctx.save();
+      ctx.strokeStyle = 'rgba(200, 160, 210, 0.18)';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([6, 6]);
+      ctx.shadowColor = '#d090e0';
+      ctx.shadowBlur = 8;
+      ctx.beginPath();
+      ctx.moveTo(a.x, a.y);
+      ctx.lineTo(b.x, b.y);
+      ctx.stroke();
+      ctx.restore();
+
+      const now = ts / 1000;
+      const { nx, ny } = lineNormal();
+
+      for (const sp of sparkles) {
+        sp.t = (sp.t + sp.speed) % 1;
+
+        const base = pointOnLine(sp.t);
+        const x = base.x + nx * sp.offset;
+        const y = base.y + ny * sp.offset;
+
+        const alpha = 0.25 + 0.75 * Math.abs(Math.sin(now * sp.twinkle + sp.phase));
+
+        if (sp.type === 'star') {
+          drawStar(x, y, sp.size, sp.color, alpha);
+        } else {
+          drawGlowDot(x, y, sp.size, sp.color, alpha);
+        }
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    requestAnimationFrame(animate);
+  </script>
+
+</body>
+</html>
