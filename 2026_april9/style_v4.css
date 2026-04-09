@@ -1,0 +1,328 @@
+/* ============================================================
+   Lawrence & Laramie — "The Noir Stage" Design System
+   ============================================================ */
+
+/* ── Google Fonts ─────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=Epilogue:wght@400;700;900&family=Manrope:wght@300;400;500&family=Space+Grotesk:wght@400;500&display=swap');
+
+/* ── Design Tokens ────────────────────────────────────────── */
+:root {
+  /* Surface hierarchy */
+  --surface-container-lowest:  #0a0a0a;
+  --surface-container-low:     #111111;
+  --surface:                   #131313;
+  --surface-container:         #1a1a1a;
+  --surface-container-high:    #222222;
+  --surface-container-highest: #2c2c2c;
+
+  /* Text roles */
+  --on-surface:         #f0e8de;
+  --on-surface-variant: #a89880;
+  --on-primary:         #1a0012;
+
+  /* Accent palette */
+  --primary:            #ffafd7;
+  --primary-container:  #e362ae;
+  --secondary:          #75d4e8;
+  --tertiary:           #b0c4b1;
+  --outline-variant:    rgba(255, 175, 215, 0.15);
+  --error:              #ff6b6b;
+
+  /* Typography scale */
+  --font-display:  'Epilogue', sans-serif;
+  --font-body:     'Manrope', sans-serif;
+  --font-label:    'Space Grotesk', sans-serif;
+
+  /* Spacing */
+  --space-xs:   4px;
+  --space-sm:   8px;
+  --space-md:  16px;
+  --space-lg:  32px;
+  --space-xl:  64px;
+
+  /* Radius */
+  --radius-none: 0px;
+  --radius-sm:   2px;
+
+  /* Transitions */
+  --transition-fast:   0.15s ease;
+  --transition-normal: 0.25s ease;
+}
+
+/* ── Reset ────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ── Base ─────────────────────────────────────────────────── */
+html, body {
+  height: 100%;
+}
+
+body {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-container-lowest);
+  font-family: var(--font-body);
+  color: var(--on-surface);
+  overflow: hidden;
+  cursor: none; /* hidden in favour of spotlight cursor */
+}
+
+/* ── Spotlight Cursor ─────────────────────────────────────── */
+#spotlight-cursor {
+  pointer-events: none;
+  position: fixed;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 175, 215, 0.055) 0%,
+    transparent 65%
+  );
+  transform: translate(-50%, -50%);
+  z-index: 9999;
+  transition: transform 0.05s linear;
+  mix-blend-mode: screen;
+}
+
+/* ── Header ───────────────────────────────────────────────── */
+header {
+  padding: 18px 28px;
+  background: rgba(19, 19, 19, 0.70);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 500;
+  /* No border — depth through tonal shift */
+}
+
+.header-left {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+}
+
+header h1 {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 900;
+  color: var(--on-surface);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+header .subtitle {
+  font-family: var(--font-label);
+  font-size: 0.68rem;
+  color: var(--on-surface-variant);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* ── Ticket Button (Primary CTA) ─────────────────────────── */
+.btn-tickets {
+  font-family: var(--font-label);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--on-primary);
+  background: linear-gradient(
+    135deg,
+    var(--primary) 0%,
+    var(--primary-container) 100%
+  );
+  padding: 9px 20px;
+  border-radius: var(--radius-sm);
+  border: none;
+  cursor: none;
+  position: relative;
+  overflow: hidden;
+  transition:
+    box-shadow var(--transition-normal),
+    opacity    var(--transition-fast);
+  box-shadow: 0 0 0 rgba(255, 175, 215, 0);
+}
+
+.btn-tickets::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255,255,255,0.18) 0%,
+    transparent 60%
+  );
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+}
+
+.btn-tickets:hover {
+  box-shadow:
+    0 0 28px rgba(255, 175, 215, 0.35),
+    0 8px 32px rgba(255, 175, 215, 0.18);
+  opacity: 0.95;
+}
+
+.btn-tickets:hover::before {
+  opacity: 1;
+}
+
+/* ── Map Wrapper ──────────────────────────────────────────── */
+#map-wrapper {
+  flex: 1;
+  position: relative;
+  background: var(--surface-container-lowest);
+  min-height: 0;
+}
+
+#map {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-none);
+  position: relative;
+  z-index: 1;
+}
+
+/* Sparkle canvas over the map */
+#sparkle-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 400;
+}
+
+/* ── Leaflet Popup Overrides ──────────────────────────────── */
+.leaflet-popup-content-wrapper {
+  background: rgba(19, 19, 19, 0.88);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border-radius: var(--radius-sm);
+  box-shadow:
+    0 8px 40px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(255, 175, 215, 0.08);
+  color: var(--on-surface);
+}
+
+.leaflet-popup-tip {
+  background: rgba(19, 19, 19, 0.88);
+}
+
+.leaflet-popup-content {
+  margin: 16px 20px;
+}
+
+.popup-city {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--primary);
+  margin-bottom: 4px;
+}
+
+.popup-here {
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  font-style: italic;
+  font-weight: 700;
+  color: var(--primary);
+  letter-spacing: 0.08em;
+}
+
+.popup-state {
+  font-family: var(--font-label);
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  color: var(--on-surface-variant);
+  text-transform: uppercase;
+  margin-top: 5px;
+}
+
+.leaflet-popup-close-button {
+  color: var(--on-surface-variant) !important;
+  font-size: 16px !important;
+}
+
+.leaflet-popup-close-button:hover {
+  color: var(--primary) !important;
+}
+
+/* Suppress Leaflet's default attribution box border */
+.leaflet-control-attribution {
+  background: rgba(13, 13, 13, 0.65) !important;
+  backdrop-filter: blur(8px);
+  font-family: var(--font-label);
+  font-size: 0.58rem;
+  letter-spacing: 0.06em;
+  color: #444 !important;
+  border-radius: var(--radius-sm) !important;
+}
+
+.leaflet-control-attribution a {
+  color: #555 !important;
+}
+
+/* Zoom controls */
+.leaflet-control-zoom a {
+  background: var(--surface-container-high) !important;
+  color: var(--on-surface-variant) !important;
+  border: none !important;
+  border-radius: var(--radius-sm) !important;
+  font-family: var(--font-body) !important;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.leaflet-control-zoom a:hover {
+  background: var(--surface-container-highest) !important;
+  color: var(--primary) !important;
+}
+
+.leaflet-bar {
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5) !important;
+  border: none !important;
+}
+
+/* ── Ambient label in the corner ─────────────────────────── */
+#corner-label {
+  position: absolute;
+  bottom: 28px;
+  left: 28px;
+  z-index: 500;
+  pointer-events: none;
+}
+
+#corner-label .cl-year {
+  font-family: var(--font-label);
+  font-size: 0.62rem;
+  letter-spacing: 0.22em;
+  color: rgba(168, 152, 128, 0.35);
+  text-transform: uppercase;
+}
+
+/* ── Responsive ───────────────────────────────────────────── */
+@media (max-width: 480px) {
+  header h1 {
+    font-size: 0.85rem;
+  }
+  header .subtitle {
+    display: none;
+  }
+  .btn-tickets {
+    font-size: 0.65rem;
+    padding: 8px 14px;
+  }
+}

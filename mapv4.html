@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Lawrence & Laramie</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+
+  <!-- Noir Stage Design System -->
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+  <!-- Spotlight cursor element -->
+  <div id="spotlight-cursor"></div>
+
+  <header>
+    <div class="header-left">
+      <h1>The Laramie Project@KU</h1>
+      <span class="subtitle">Lawrence, KS &nbsp;·&nbsp; Laramie, WY</span>
+    </div>
+
+    <!-- Ticket CTA — update href to the real ticketing URL -->
+    <a class="btn-tickets" href="https://kutheatre.com/laramie-project" aria-label="Purchase tickets">
+      Purchase Tickets
+    </a>
+  </header>
+
+  <div id="map-wrapper">
+    <div id="map"></div>
+    <canvas id="sparkle-canvas"></canvas>
+
+    <!-- Ambient corner label -->
+    <div id="corner-label">
+      <div class="cl-year">A Live Performance</div>
+    </div>
+  </div>
+
+  <script>
+    // ── Spotlight Cursor ─────────────────────────────────────
+    const spotlightEl = document.getElementById('spotlight-cursor');
+    document.addEventListener('mousemove', e => {
+      spotlightEl.style.left = e.clientX + 'px';
+      spotlightEl.style.top  = e.clientY + 'px';
+    });
+
+    // ── Coordinates ──────────────────────────────────────────
+    const LAWRENCE = [38.9717, -95.2353];
+    const LARAMIE  = [41.3114, -105.5911];
+
+    // ── Leaflet map ──────────────────────────────────────────
+    const map = L.map('map', {
+      center: [39.9, -100.0],
+      zoom: 6,
+      zoomControl: true,
+    });
+
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      attribution: '&copy; <a href="https://carto.com/">CARTO</a>',
+      subdomains: 'abcd',
+      maxZoom: 19
+    }).addTo(map);
+
+    // Fit both markers in view on load
+    map.fitBounds([LAWRENCE, LARAMIE], { padding: [60, 60] });
+
+    function makeIcon(color, glowColor) {
+      return L.divIcon({
+        className: '',
+        html: `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="30" viewBox="0 0 22 30">
+          <defs>
+            <filter id="glow-${glowColor.replace('#','')}">
+              <feGaussianBlur stdDeviation="2.5" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+          <circle cx="11" cy="11" r="7" fill="${color}" opacity="0.92"
+            filter="url(#glow-${glowColor.replace('#','')})"/>
+          <circle cx="11" cy="11" r="3.5" fill="${glowColor}" opacity="0.6"/>
+          <line x1="11" y1="18" x2="11" y2="29" stroke="${color}" stroke-width="1.5" opacity="0.5"/>
+        </svg>`,
+        iconSize: [22, 30],
+        iconAnchor: [11, 29],
+        popupAnchor: [0, -30]
+      });
+    }
+
+    L.marker(LAWRENCE, { icon: makeIcon('#ffafd7', '#ffffff') })
+      .addTo(map)
+      .bindPopup(`
+        <div class="popup-here">&#10022; You are here</div>
+        <div class="popup-state" style="margin-top:5px;">Lawrence, Kansas &nbsp;&middot;&nbsp; 38.97&deg;N 95.24&deg;W</div>
+        <div>
+          <ul>
+            <li><a href="url">link text1</a></li>
+            <li><a href="url">link text2</a></li>
+            <li><a href="url">link text3</a></li>
+          </ul>
+        </div>
+      `);
+
+    L.marker(LARAMIE, { icon: makeIcon('#75d4e8', '#ffffff') })
+      .addTo(map)
+      .bindPopup(`
+        <div class="popup-city">Laramie</div>
+        <div class="popup-state">Wyoming, USA &nbsp;&middot;&nbsp; 41.31&deg;N 105.59&deg;W</div>
+        <div>
+          <ul>
+            <li><a href="url">link text1</a></li>
+            <li><a href="url">link text2</a></li>
+            <li><a href="url">link text3</a></li>
+          </ul>
+        </div>
+      `);
+
+    // ── Sparkle line on canvas ───────────────────────────────
+    const canvas = document.getElementById('sparkle-canvas');
+    const ctx    = canvas.getContext('2d');
+
+    function resize() {
+      canvas.width  = canvas.offsetWidth;
+      canvas.height = canvas.offsetHeight;
+    }
+    resize();
+    window.addEventListener('resize', () => { resize(); rebuildSparkles(); });
+    map.on('zoom move zoomend moveend', rebuildSparkles);
+
+    // Palette drawn from the Noir Stage design system
+    const COLORS = [
+      '#ffafd7', '#ff69b4', '#ffb3de', '#e362ae', // primaries / pinks
+      '#75d4e8', '#aad4ff', '#60a5fa', '#93c5fd',  // secondaries / blues
+      '#ffffff', '#e0e0ff', '#ffe0f0',              // whites / pale
+    ];
+
+    const NUM_SPARKLES = 90;
+    let sparkles = [];
+
+    function latLngToPixel(latLng) {
+      const pt = map.latLngToContainerPoint(L.latLng(latLng));
+      return { x: pt.x, y: pt.y };
+    }
+
+    function pointOnLine(t) {
+      const a = latLngToPixel(LAWRENCE);
+      const b = latLngToPixel(LARAMIE);
+      return {
+        x: a.x + (b.x - a.x) * t,
+        y: a.y + (b.y - a.y) * t,
+      };
+    }
+
+    function lineNormal() {
+      const a = latLngToPixel(LAWRENCE);
+      const b = latLngToPixel(LARAMIE);
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const len = Math.sqrt(dx*dx + dy*dy) || 1;
+      return { nx: -dy / len, ny: dx / len };
+    }
+
+    function rebuildSparkles() {
+      sparkles = [];
+      for (let i = 0; i < NUM_SPARKLES; i++) {
+        sparkles.push({
+          t:       Math.random(),
+          offset:  (Math.random() - 0.5) * 10,
+          size:    0.7 + Math.random() * 2.4,
+          color:   COLORS[Math.floor(Math.random() * COLORS.length)],
+          speed:   0.0004 + Math.random() * 0.0008,
+          phase:   Math.random() * Math.PI * 2,
+          twinkle: 1.5 + Math.random() * 4,
+          type:    Math.random() < 0.3 ? 'star' : 'dot',
+        });
+      }
+    }
+    rebuildSparkles();
+
+    function drawStar(x, y, r, color, alpha) {
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 0.9;
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 10;
+      for (let a = 0; a < 4; a++) {
+        const angle = (a / 4) * Math.PI;
+        ctx.beginPath();
+        ctx.moveTo(x + Math.cos(angle) * r * 2.2, y + Math.sin(angle) * r * 2.2);
+        ctx.lineTo(x - Math.cos(angle) * r * 2.2, y - Math.sin(angle) * r * 2.2);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawGlowDot(x, y, r, color, alpha) {
+      ctx.save();
+      ctx.globalAlpha = alpha * 0.25;
+      const grad = ctx.createRadialGradient(x, y, 0, x, y, r * 4);
+      grad.addColorStop(0, color);
+      grad.addColorStop(1, 'transparent');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(x, y, r * 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = alpha;
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 12;
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(x, y, r, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function animate(ts) {
+      const W = canvas.width, H = canvas.height;
+      ctx.clearRect(0, 0, W, H);
+
+      // Faint dashed connector — primary at low opacity
+      const a = latLngToPixel(LAWRENCE);
+      const b = latLngToPixel(LARAMIE);
+
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255, 175, 215, 0.14)';
+      ctx.lineWidth = 1.5;
+      ctx.setLineDash([6, 8]);
+      ctx.shadowColor = '#ffafd7';
+      ctx.shadowBlur = 10;
+      ctx.beginPath();
+      ctx.moveTo(a.x, a.y);
+      ctx.lineTo(b.x, b.y);
+      ctx.stroke();
+      ctx.restore();
+
+      const now = ts / 1000;
+      const { nx, ny } = lineNormal();
+
+      for (const sp of sparkles) {
+        sp.t = (sp.t + sp.speed) % 1;
+        const base = pointOnLine(sp.t);
+        const x = base.x + nx * sp.offset;
+        const y = base.y + ny * sp.offset;
+        const alpha = 0.25 + 0.75 * Math.abs(Math.sin(now * sp.twinkle + sp.phase));
+
+        if (sp.type === 'star') {
+          drawStar(x, y, sp.size, sp.color, alpha);
+        } else {
+          drawGlowDot(x, y, sp.size, sp.color, alpha);
+        }
+      }
+
+      requestAnimationFrame(animate);
+    }
+
+    requestAnimationFrame(animate);
+  </script>
+
+</body>
+</html>
