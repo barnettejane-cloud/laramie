@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Moments — Lawrence & Laramie</title>
+
+  <!-- Noir Stage Design System -->
+  <link rel="stylesheet" href="style.css"/>
+
+  <style>
+    /* ── Moments Page Overrides ─────────────────────────────── */
+    body {
+      overflow-y: auto;
+      cursor: default;
+    }
+
+    /* Re-enable visible cursor on this page */
+    #spotlight-cursor { display: none; }
+    .btn-tickets, #hamburger, #nav-close, .nav-links a { cursor: pointer; }
+
+    /* ── Page Content ─────────────────────────────────────────── */
+    #page-content {
+      flex: 1;
+      max-width: 960px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 56px 32px 80px;
+    }
+
+    .page-eyebrow {
+      font-family: var(--font-label);
+      font-size: 0.62rem;
+      letter-spacing: 0.26em;
+      color: var(--on-surface-variant);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .page-title {
+      font-family: var(--font-display);
+      font-size: 2.2rem;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--on-surface);
+      margin-bottom: 6px;
+      line-height: 1.1;
+    }
+
+    .page-title span {
+      color: var(--primary);
+    }
+
+    .page-subtitle {
+      font-family: var(--font-body);
+      font-size: 0.8rem;
+      color: var(--on-surface-variant);
+      letter-spacing: 0.04em;
+      margin-bottom: 48px;
+    }
+
+    /* ── Moments Table ──────────────────────────────────────── */
+    .moments-table-wrap {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    .moments-table {
+      width: 100%;
+      border-collapse: collapse;
+      border: none;
+    }
+
+    /* Column headers */
+    .moments-table thead tr th {
+      font-family: var(--font-label);
+      font-size: 0.6rem;
+      font-weight: 500;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--on-surface-variant);
+      padding: 0 0 18px 0;
+      text-align: left;
+      border: none;
+    }
+
+    .moments-table thead tr th:last-child {
+      padding-left: 40px;
+    }
+
+    /* Divider between header and body */
+    .moments-table thead tr th::after {
+      display: none;
+    }
+
+    .moments-table thead {
+      border-bottom: 1px solid var(--outline-variant);
+    }
+
+    /* Body rows */
+    .moments-table tbody tr {
+      border-bottom: 1px solid rgba(255, 175, 215, 0.05);
+      transition: background var(--transition-fast);
+    }
+
+    .moments-table tbody tr:hover {
+      background: rgba(255, 175, 215, 0.03);
+    }
+
+    .moments-table tbody td {
+      border: none;
+      padding: 14px 0;
+      vertical-align: top;
+    }
+
+    .moments-table tbody td:last-child {
+      padding-left: 40px;
+    }
+
+    /* Row number */
+    .row-num {
+      font-family: var(--font-label);
+      font-size: 0.58rem;
+      letter-spacing: 0.12em;
+      color: rgba(168, 152, 128, 0.35);
+      min-width: 32px;
+      display: inline-block;
+      user-select: none;
+    }
+
+    /* Column A — primary cell */
+    .col-a-inner {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+    }
+
+    .col-a-text {
+      font-family: var(--font-display);
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--on-surface);
+      line-height: 1.4;
+    }
+
+    /* Column B — secondary cell */
+    .col-b-text {
+      font-family: var(--font-body);
+      font-size: 0.78rem;
+      font-weight: 300;
+      color: var(--on-surface-variant);
+      line-height: 1.6;
+      letter-spacing: 0.02em;
+    }
+
+    /* Accent dot for select rows */
+    .accent-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--primary);
+      flex-shrink: 0;
+      margin-top: 5px;
+      opacity: 0.6;
+    }
+
+    /* ── Responsive ─────────────────────────────────────────── */
+    @media (max-width: 600px) {
+      #page-content {
+        padding: 40px 20px 60px;
+      }
+      .page-title {
+        font-size: 1.55rem;
+      }
+      .moments-table tbody td:last-child {
+        padding-left: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="spotlight-cursor"></div>
+  <div id="nav-overlay"></div>
+
+  <nav id="nav-drawer" aria-hidden="true">
+    <button id="nav-close" aria-label="Close navigation menu">&times;</button>
+    <ul class="nav-links">
+      <li><a href="infohub.html">About Matthew Shepard</a></li>
+      <li><a href="moments.html">Moments</a></li>
+      <li><a href="#">Laramie Queer History</a></li>
+      <li><a href="#">Lawrence Queer History</a></li>
+      <li><a href="#">Anti-Queer Legislation</a></li>
+      <li><a href="https://kutheatre.com/laramie-project">Purchase Tickets</a></li>
+    </ul>
+  </nav>
+
+  <header>
+    <div class="header-left">
+      <button id="hamburger" aria-label="Open navigation menu" aria-expanded="false" aria-controls="nav-drawer">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <h1>The Laramie Project@KU</h1>
+      <span class="subtitle">Lawrence, KS &nbsp;·&nbsp; Laramie, WY</span>
+    </div>
+    <a class="btn-tickets" href="https://kutheatre.com/laramie-project" aria-label="Purchase tickets">
+      Purchase Tickets
+    </a>
+  </header>
+
+  <main id="page-content">
+    <p class="page-eyebrow">The Laramie Project</p>
+    <h2 class="page-title">Mo<span>ments</span></h2>
+    <p class="page-subtitle">Lawrence, Kansas &nbsp;·&nbsp; Laramie, Wyoming &nbsp;·&nbsp; A record of what happened</p>
+
+    <div class="moments-table-wrap">
+      <table class="moments-table" aria-label="Moments table">
+        <thead>
+          <tr>
+            <th scope="col">Moment</th>
+            <th scope="col">Detail</th>
+          </tr>
+        </thead>
+        <tbody id="moments-tbody">
+          <!-- Rows injected by script below -->
+        </tbody>
+      </table>
+    </div>
+  </main>
+
+  <script>
+    // ── Generate 100 placeholder rows ───────────────────────
+    // Replace the content arrays below with your real moment data.
+    const momentA = [
+      "Arrival in Laramie",
+      "First interview",
+      "The fence",
+      "Hospital vigil",
+      "Community meeting",
+      "A moment of silence",
+      "The trial begins",
+      "Closing arguments",
+      "Verdict",
+      "Aftermath",
+    ];
+
+    const momentB = [
+      "Members of Tectonic Theater Project arrive in Laramie, Wyoming to begin their research.",
+      "The first of over 200 interviews conducted with Laramie residents, university staff, and officials.",
+      "The site on the outskirts of town where Matthew was found, now a place of memory and reflection.",
+      "The community gathers outside Poudre Valley Hospital as Matthew remains in a coma.",
+      "Laramie residents convene to discuss the event, their town, and what comes next.",
+      "Students and faculty at the University of Wyoming hold a candlelight vigil on campus.",
+      "Aaron McKinney and Russell Henderson face the court for their roles in the attack.",
+      "The prosecution and defense present their final cases to the jury.",
+      "The jury returns with its verdict; reactions ripple through Laramie and the nation.",
+      "Weeks later, the town begins to grapple with its identity and what this moment means.",
+    ];
+
+    const tbody = document.getElementById('moments-tbody');
+    const accentRows = new Set([1, 5, 12, 23, 34, 45, 56, 67, 78, 89, 99]);
+
+    for (let i = 1; i <= 100; i++) {
+      const aText = momentA[(i - 1) % momentA.length];
+      const bText = momentB[(i - 1) % momentB.length];
+      const isAccent = accentRows.has(i);
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>
+          <div class="col-a-inner">
+            <span class="row-num">${String(i).padStart(2, '0')}</span>
+            ${isAccent ? '<span class="accent-dot" aria-hidden="true"></span>' : ''}
+            <span class="col-a-text">${aText}</span>
+          </div>
+        </td>
+        <td>
+          <span class="col-b-text">${bText}</span>
+        </td>
+      `;
+      tbody.appendChild(tr);
+    }
+
+    // ── Hamburger Menu ───────────────────────────────────────
+    const hamburger  = document.getElementById('hamburger');
+    const navDrawer  = document.getElementById('nav-drawer');
+    const navOverlay = document.getElementById('nav-overlay');
+    const navClose   = document.getElementById('nav-close');
+
+    function openNav() {
+      navDrawer.classList.add('open');
+      navOverlay.classList.add('visible');
+      hamburger.setAttribute('aria-expanded', 'true');
+      navDrawer.setAttribute('aria-hidden', 'false');
+      hamburger.classList.add('active');
+    }
+
+    function closeNav() {
+      navDrawer.classList.remove('open');
+      navOverlay.classList.remove('visible');
+      hamburger.setAttribute('aria-expanded', 'false');
+      navDrawer.setAttribute('aria-hidden', 'true');
+      hamburger.classList.remove('active');
+    }
+
+    hamburger.addEventListener('click', () =>
+      navDrawer.classList.contains('open') ? closeNav() : openNav()
+    );
+    navClose.addEventListener('click', closeNav);
+    navOverlay.addEventListener('click', closeNav);
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeNav(); });
+  </script>
+
+</body>
+</html>
