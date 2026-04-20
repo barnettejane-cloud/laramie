@@ -346,9 +346,9 @@
     ];
 
     const tbody = document.getElementById('moments-tbody');
-    const accentRows = new Set([1, 5, 12, 23, 34, 45, 56, 67, 78, 89, 99]);
+    const accentRows = new Set([1, 5, 12, 23, 34, 45]);
 
-    for (let i = 1; i <= 100; i++) {
+    for (let i = 1; i <= 51; i++) {
       const aText = momentA[(i - 1) % momentA.length];
       const bText = momentB[(i - 1) % momentB.length];
       const isAccent = accentRows.has(i);
